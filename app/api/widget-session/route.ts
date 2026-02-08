@@ -48,6 +48,8 @@ function getCfGeo(req: Request): {
 export async function POST(req: Request) {
   const json = await req.json().catch(() => null);
   const parsed = BodySchema.safeParse(json);
+
+  console.log('widget body that is updaled',parsed)
   if (!parsed.success) {
     return jsonError("Invalid request", 400, { issues: parsed.error.issues });
   }

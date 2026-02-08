@@ -23,6 +23,8 @@ type SessionRow = {
   startedAt: string;
   lastSeenAt: string;
   userId?: string | null;
+  name?: string | null;
+  whatsapp?: string | null;
   country?: string | null;
   region?: string | null;
   city?: string | null;
@@ -369,7 +371,9 @@ export function LiveChats({ chatbotId }: Readonly<{ chatbotId: string }>) {
                 : "hover:bg-accent"
             )}
           >
-            <div className="font-medium truncate">{s.userId || "Unknown user"}</div>
+            <div className="font-medium truncate">Session: {s.sessionId}</div>
+            <div className="text-xs text-muted-foreground truncate">Name: {s.name || "Unknown"}</div>
+            <div className="text-xs text-muted-foreground truncate">WhatsApp: {s.whatsapp || "Unknown"}</div>
             <div className="text-xs text-muted-foreground truncate">
               {formatWhere(s)}
             </div>

@@ -419,11 +419,11 @@ export default function ManageChatbotPage() {
                 }
               >
                 <TabsList>
-                  <TabsTrigger value="text">Text</TabsTrigger>
+                  {/* <TabsTrigger value="text">Text</TabsTrigger> */}
                   <TabsTrigger value="documents">Documents</TabsTrigger>
                   <TabsTrigger value="faq">FAQ</TabsTrigger>
                 </TabsList>
-
+{/* 
                 <TabsContent value="text" className="grid gap-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="instructionText">Text instructions</Label>
@@ -443,7 +443,7 @@ export default function ManageChatbotPage() {
                     Limit is dynamic: {CHATBOT_LIMITS.instructionTextMaxChars}{" "}
                     chars
                   </div>
-                </TabsContent>
+                </TabsContent> */}
 
                 <TabsContent value="documents" className="grid gap-2">
                   <Label>Instruction files</Label>
@@ -655,7 +655,7 @@ export default function ManageChatbotPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          {/* <Card>
             <CardHeader>
               <CardTitle>Behavior settings</CardTitle>
             </CardHeader>
@@ -942,7 +942,7 @@ export default function ManageChatbotPage() {
                 </Button>
               </div>
             </CardContent>
-          </Card>
+          </Card> */}
         </>
       ) : null}
     </div>

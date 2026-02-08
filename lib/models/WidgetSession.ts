@@ -13,6 +13,8 @@ export type WidgetSessionDocument = mongoose.Document & {
   // Timing
   startedAt: Date;
   lastSeenAt: Date;
+  name: string;
+  whatsapp: string;
 
   // Network / geo (best-effort)
   ip?: string;
@@ -35,9 +37,11 @@ export type WidgetSessionDocument = mongoose.Document & {
 
 const WidgetSessionSchema = new mongoose.Schema<WidgetSessionDocument>(
   {
-  chatbotToken: { type: String, required: true, index: true },
-  sessionId: { type: String, required: true },
-  userId: { type: String },
+    chatbotToken: { type: String, required: true, index: true },
+    sessionId: { type: String, required: true },
+    userId: { type: String },
+    name: { type: String, default: "" },
+    whatsapp: { type: String, default: "" },
 
     startedAt: { type: Date, default: Date.now, index: true },
     lastSeenAt: { type: Date, default: Date.now, expires: '7d' },

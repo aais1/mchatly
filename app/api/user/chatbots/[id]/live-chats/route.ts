@@ -45,6 +45,8 @@ export async function GET(
         id: s._id.toString(),
         sessionId: s.sessionId,
         userId: s.userId ?? null,
+        name: s.name ?? null,
+        whatsapp: s.whatsapp ?? null,
         startedAt: s.startedAt,
         lastSeenAt: s.lastSeenAt,
         country: s.country ?? null,
