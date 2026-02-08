@@ -9,6 +9,8 @@ import { parseUserAgent } from "@/lib/analytics/userAgent";
 const BodySchema = z.object({
   token: z.string().min(10),
   sessionId: z.string().min(8).max(128),
+  name: z.string().max(128).optional(),
+  whatsapp: z.string().max(32).optional(),
   pageUrl: z.string().max(5000).optional(),
   referrer: z.string().max(5000).optional(),
   language: z.string().max(64).optional(),
@@ -86,6 +88,8 @@ export async function POST(req: Request) {
         referrer: parsed.data.referrer ?? undefined,
         language: parsed.data.language ?? undefined,
         timezone: parsed.data.timezone ?? undefined,
+        name: parsed.data.name ?? undefined,
+        whatsapp: parsed.data.whatsapp ?? undefined,
       },
     },
     { upsert: true }

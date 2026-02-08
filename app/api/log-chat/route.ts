@@ -12,6 +12,8 @@ const BodySchema = z.object({
   messageBy: z.enum(["user", "admin", "bot"]),
   sessionId: z.string().max(128).optional(),
   userId: z.string().max(128).optional(),
+  name: z.string().max(128).optional(),
+  whatsapp: z.string().max(32).optional(),
 });
 
 export async function POST(req: Request) {
@@ -33,15 +35,18 @@ export async function POST(req: Request) {
     if (!chatbotToken || !sessionId) return jsonError("Missing token or sessionId", 400);
 
     const { message, messageBy, userId } = parsed.data;
+  const { name, whatsapp } = parsed.data;
     const now = new Date();
 
     const doc = await ChatHistory.create({
-      chatbotToken,
-      sessionId,
-      userId: userId ?? undefined,
-      message,
-      messageBy,
-      timestamp: now,
+  chatbotToken,
+  sessionId,
+  userId: userId ?? undefined,
+  message,
+  messageBy,
+  name: name ?? undefined,
+  whatsapp: whatsapp ?? undefined,
+  timestamp: now,
     });
 
     // Trigger timer if bot says trigger phrase
