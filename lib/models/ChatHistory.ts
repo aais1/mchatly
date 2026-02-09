@@ -9,6 +9,7 @@ export type ChatHistoryDocument = mongoose.Document & {
   name?: string;
   whatsapp?: string;
   timestamp: Date;
+  type: "text" | "image" | "audio";
 };
 
 const ChatHistorySchema = new mongoose.Schema<ChatHistoryDocument>(

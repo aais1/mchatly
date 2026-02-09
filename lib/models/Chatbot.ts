@@ -20,6 +20,7 @@ export type ChatbotDocument = mongoose.Document & {
     widgetUserTextColor?: string;
     widgetBotTextColor?: string;
     widgetWelcomeMessage?: string;
+    starterQuestions?: string[];
   };
   instructionFiles?: Array<{
     _id?: mongoose.Types.ObjectId;
