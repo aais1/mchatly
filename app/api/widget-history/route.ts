@@ -25,8 +25,7 @@ export async function GET(req: Request) {
 
     const items = messages.map((m) => ({
       text: m.message,
-      // Map 'user' -> 'user', 'bot'|'admin' -> 'bot' (or keep distinct if frontend handles it)
-      // Frontend expects: role
+  
       role: m.messageBy, 
       timestamp: m.timestamp
     }));
