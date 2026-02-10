@@ -140,7 +140,7 @@ export async function POST(req: Request) {
 
     const reply = best && bestScore >= CONFIDENCE_THRESHOLD
       ? extractAnswer(best.text)
-      : "Someone will contact you shortly.";
+      : "Your question will be answered shortly.";
 
     return jsonOk({
       token: parsed.data.token,

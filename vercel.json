@@ -1,0 +1,12 @@
+{
+  "cron": [
+    {
+      "path": "/api/notify-admin",
+      "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/cleanup-cloudinary",
+      "schedule": "0 3 * * *"
+    }
+  ]
+}

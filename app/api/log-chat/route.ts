@@ -61,9 +61,9 @@ export async function POST(req: Request) {
       cloudinaryResourceType,
     });
 
-    // Trigger notification
+    // Trigger notification (now async/persistent)
     if (messageBy === 'bot' && message.includes("Someone will contact you shortly")) {
-      scheduleAdminNotification(sessionId, chatbotToken);
+      await scheduleAdminNotification(sessionId, chatbotToken);
     }
 
     return jsonOk({
