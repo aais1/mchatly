@@ -37,9 +37,15 @@ export async function GET(request: NextRequest) {
     for (const media of oldMedia) {
       try {
         // Delete from Cloudinary
-        await cloudinary.uploader.destroy(media.cloudinaryPublicId, {
-          resource_type: media.cloudinaryResourceType || 'image',
-        });
+        if (typeof media.cloudinaryPublicId === 'string') {
+          await cloudinary.uploader.destroy(media.cloudinaryPublicId, {
+            resource_type: media.cloudinaryResourceType || 'image',
+          });
+        } else {
+          console.error(`Invalid publicId for media:`, media);
+          failedCount++;
+          continue;
+        }
 
         // Mark as deleted in MongoDB
         media.cloudinaryDeletedAt = new Date();
