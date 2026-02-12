@@ -6,6 +6,7 @@ const AdminNotificationSchema = new mongoose.Schema({
   scheduledFor: { type: Date, required: true },
   sent: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
+  qstashMessageId: { type: String },
 });
 
 export default mongoose.models.AdminNotification ||

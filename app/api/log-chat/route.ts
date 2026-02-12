@@ -3,6 +3,8 @@ import { connectToDatabase } from "@/lib/db/mongoose";
 import { jsonError, jsonOk } from "@/lib/http";
 import { ChatHistory } from "@/lib/models/ChatHistory";
 import { scheduleAdminNotification } from "@/lib/adminNotifications";
+import AdminNotification from "@/lib/models/AdminNotification";
+import { deleteQStashNotification } from "@/lib/qstash";
 
 const BodySchema = z.object({
   token: z.string().min(10),
@@ -62,8 +64,24 @@ export async function POST(req: Request) {
     });
 
     // Trigger notification (now async/persistent)
-    if (messageBy === 'bot' && message.includes("Someone will contact you shortly")) {
+    if (messageBy === 'bot' && message.includes("Your question will be answered shortly.")) {
+      console.log(`[QStash] Scheduling notification for session ${sessionId}, chatbot ${chatbotToken}`);
       await scheduleAdminNotification(sessionId, chatbotToken);
+      console.log(`[QStash] Notification scheduled for session ${sessionId}`);
+    }
+
+    // If admin replies, delete QStash job
+    if (messageBy === 'admin') {
+      const notif = await AdminNotification.findOne({ sessionId, chatbotToken, sent: false });
+      if (notif?.qstashMessageId) {
+        console.log(`[QStash] Deleting scheduled notification for session ${sessionId}, chatbot ${chatbotToken}, messageId ${notif.qstashMessageId}`);
+        await deleteQStashNotification(notif.qstashMessageId);
+        notif.sent = true;
+        await notif.save();
+        console.log(`[QStash] Notification deleted and marked as sent for session ${sessionId}`);
+      } else {
+        console.log(`[QStash] No scheduled notification found for session ${sessionId}, chatbot ${chatbotToken}`);
+      }
     }
 
     return jsonOk({

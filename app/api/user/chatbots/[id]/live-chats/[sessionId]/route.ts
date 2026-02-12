@@ -45,7 +45,7 @@ export async function GET(
       .lean();
 
 
-      console.log(items)
+  
 
     return jsonOk({
       sessionId: parsed.data.sessionId,
