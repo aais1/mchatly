@@ -2,8 +2,23 @@ import { z } from "zod";
 import { connectToDatabase } from "@/lib/db/mongoose";
 import { jsonError, jsonOk } from "@/lib/http";
 import { Chatbot } from "@/lib/models/Chatbot";
+
+
 import { embedText } from "@/lib/embeddings/gemini";
 import { queryTopK } from "@/lib/vectorstore/pinecone";
+import { generateText } from "@/lib/llm/gemini";
+import { convertSegmentPathToStaticExportFilename } from "next/dist/shared/lib/segment-cache/segment-value-encoding";
+
+function extractFAQAnswer(text: string): string {
+  // Remove Q: ... A: ... pattern, return only the answer
+  const qaMatch = /(?:Q:|Question:)\s*.*?(?:A:|Answer:)\s*(.*)/is.exec(text);
+  let answer = qaMatch?.[1] ?? text;
+  // Remove A: or Answer: prefix if present at the start (including after newlines)
+  answer = answer.replace(/^(?:A:|Answer:)\s*/i, "").replace(/^\s*\n?(?:A:|Answer:)\s*/i, "");
+  // Remove Q: or Question: prefix if present at the start
+  answer = answer.replace(/^(?:Q:|Question:)\s*/i, "");
+  return answer.trim();
+}
 
 const BodySchema = z.object({
   token: z.string().min(10),
@@ -19,35 +34,8 @@ const BodySchema = z.object({
     .optional(),
 });
 
-const CONFIDENCE_THRESHOLD = 0.68
-;
-
-function extractAnswer(text: string): string {
-  const trimmed = text.trim();
-  if (!trimmed) return trimmed;
-
-  // If text contains both Q and A, extract only the answer
-  const qaMatch = trimmed.match(/(?:Q:|Question:)\s*.*?(?:A:|Answer:)\s*(.*)/is);
-  if (qaMatch && qaMatch[1]) {
-    return qaMatch[1].trim();
-  }
-
-  // Remove Q: or Question: prefix if present at the start
-  const questionOnly = trimmed.match(/^(?:Q:|Question:)\s*/i);
-  if (questionOnly) {
-    const after = trimmed.slice(questionOnly[0].length).trim();
-    if (after) return after;
-  }
-
-  // Remove A: or Answer: prefix if present at the start
-  const answerOnly = trimmed.match(/^(?:A:|Answer:)\s*/i);
-  if (answerOnly) {
-    const after = trimmed.slice(answerOnly[0].length).trim();
-    if (after) return after;
-  }
-
-  return trimmed;
-}
+const FAQ_CONFIDENCE_THRESHOLD = 0.92;
+const CONTEXT_CONFIDENCE_THRESHOLD = 0.68;
 
 export async function POST(req: Request) {
   try {
@@ -57,12 +45,10 @@ export async function POST(req: Request) {
       return jsonError("Invalid request", 400, { issues: parsed.error.issues });
     }
 
-    console.log(parsed);
-
     await connectToDatabase();
 
     const chatbot = await Chatbot.findOne({ token: parsed.data.token })
-      .select("name description instructionText settings")
+      .select("name instructionText faqs")
       .lean();
 
     if (!chatbot) return jsonError("Unknown token", 404);
@@ -70,88 +56,87 @@ export async function POST(req: Request) {
     const query = parsed.data.message.trim();
     const queryVec = await embedText(query);
 
-    // Log query vector
-    console.log("Query Vector:", queryVec);
-
-    // Retrieve context from instructionText and uploaded document chunks stored as Pinecone vectors.
-    const chatbotId = chatbot._id.toString();
-
-    // Log the chatbot ID for context retrieval
-    console.log("Retrieving context for chatbot ID:", chatbotId);
-
+    // Query Pinecone for top matches (including FAQ and context)
     const matches = await queryTopK({
       vector: queryVec,
       topK: 8,
       includeMetadata: true,
-      filter: {
-        chatbotId,
-      },
+      filter: { chatbotId: chatbot._id.toString() },
     });
 
-    // Log the matches from Pinecone
-    console.log("Pinecone matches retrieved:", matches);
+    console.log('these are the matches ',matches)
 
-    const sources = matches
-      .map((m) => {
-        const text =
-          typeof m.metadata?.text === "string"
-            ? m.metadata.text
-            : "";
-        return {
-          id: m.id,
-          score: m.score ?? null,
-          filename:
-            typeof m.metadata?.filename === "string"
-              ? m.metadata.filename
-              : null,
-          kind:
-            typeof m.metadata?.kind === "string"
-              ? m.metadata.kind
-              : null,
-          text,
-        };
-      })
-      .filter((s) => s.text);
-
-    // Dedupe identical text snippets; keep best score.
-    const dedupedByText = new Map<string, (typeof sources)[number]>();
-    for (const s of sources) {
-      const key = s.text.trim();
-      if (!key) continue;
-      const prev = dedupedByText.get(key);
-      if (!prev) {
-        dedupedByText.set(key, s);
-        continue;
+    // Try to match FAQ first
+    let bestFAQ: { question: string; answer: string; score: number } | null = null;
+    for (const m of matches) {
+      if (m.metadata?.kind === "faq" && typeof m.metadata?.text === "string" && m.score !== undefined) {
+        if (!bestFAQ || m.score > bestFAQ.score) {
+          bestFAQ = {
+            question: String(m.metadata.question ?? ""),
+            answer: String(m.metadata.text),
+            score: m.score,
+          };
+        }
       }
-      const prevScore = prev.score ?? -Infinity;
-      const nextScore = s.score ?? -Infinity;
-      if (nextScore > prevScore) dedupedByText.set(key, s);
     }
 
-    const finalSources = Array.from(dedupedByText.values())
-      .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
-      .slice(0, 8);
+    console.log('this is the best faq condifence :',bestFAQ?.score)
 
-    // Log the final sources
-    console.log("Final sources for context:", finalSources);
+    if (bestFAQ) {
+      console.log(`[FAQ Match] Best FAQ score: ${bestFAQ.score}, threshold: ${FAQ_CONFIDENCE_THRESHOLD}`);
+      if (bestFAQ.score >= FAQ_CONFIDENCE_THRESHOLD) {
+        console.log(`[FAQ Match] Returning FAQ answer:`, extractFAQAnswer(bestFAQ.answer));
+        // consolel.log('FAQ answer after extraction:', extractFAQAnswer(bestFAQ.answer));
+        return jsonOk({
+          token: parsed.data.token,
+          reply: extractFAQAnswer(bestFAQ.answer),
+          sources: [
+            {
+              id: bestFAQ.question,
+              score: bestFAQ.score,
+              kind: "faq",
+            },
+          ],
+          usedContext: 1,
+        });
+      } else {
+        console.log(`[FAQ Match] FAQ score too low, using Gemini. Best FAQ:`, bestFAQ);
+      }
+    }
 
-    const best = finalSources[0];
-    const bestScore = best?.score ?? 0;
+    // Otherwise, use Gemini with instructionText and context
+    const contextSnippets = matches
+      .filter((m) => typeof m.metadata?.text === "string")
+      .map((m) => m.metadata?.text)
+      .filter(Boolean)
+      .slice(0, 5);
 
-    const reply = best && bestScore >= CONFIDENCE_THRESHOLD
-      ? extractAnswer(best.text)
-      : "Your question will be answered shortly.";
+    // Improved system prompt
+    const systemPrompt =
+      `You are an AI chatbot assistant for a business. Your behavior, tone, and rules are defined by the following instructions from the business owner (between triple dashes):\n---\n${(chatbot.instructionText ?? '').trim()}\n---\n` +
+      `If the user's question matches a FAQ, reply with the exact FAQ answer, verbatim, with no added prefixes or formatting.\n` +
+      `If the question is not covered by a FAQ, use the provided context and your own knowledge to answer concisely and helpfully.\n` +
+      `For non-FAQ answers, never include 'A:' or 'Answer:' or any similar prefix. Only return the answer text itself. If you don't know, say so honestly.`;
+
+    let prompt = `${systemPrompt}\n`;
+    if (contextSnippets.length) {
+      prompt += `Here is some context from the knowledge base and FAQs:\n${contextSnippets
+        .map((t, i) => `Context ${i + 1}: ${t}`)
+        .join("\n")}\n`;
+    } 
+    prompt += `User: ${query}\nAssistant:`;
+
+    const geminiReply = await generateText({ prompt });
 
     return jsonOk({
       token: parsed.data.token,
-      reply,
-      sources: finalSources.map((s) => ({
+      reply: geminiReply,
+      sources: matches.map((s) => ({
         id: s.id,
         score: s.score,
-        filename: s.filename,
-        kind: s.kind,
+        kind: s.metadata?.kind ?? null,
       })),
-      usedContext: finalSources.length,
+      usedContext: contextSnippets.length,
     });
   } catch (e) {
     console.log("Server issue:", e);
