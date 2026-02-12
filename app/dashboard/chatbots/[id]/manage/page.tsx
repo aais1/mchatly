@@ -841,7 +841,6 @@ export default function ManageChatbotPage() {
                       value={widgetWelcomeMessage}
                       onChange={(e) => setWidgetWelcomeMessage(e.target.value)}
                       placeholder="e.g. Hi! How can I help you today?"
-                      maxLength={500}
                     />
                     <div className="text-xs text-muted-foreground">
                       Shown once when a user opens the widget. Leave empty to
