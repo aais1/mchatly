@@ -661,12 +661,12 @@ export default function ManageChatbotPage() {
             </CardContent>
           </Card>
 
-          {/* <Card>
+          <Card>
             <CardHeader>
               <CardTitle>Behavior settings</CardTitle>
             </CardHeader>
-            <CardContent className="grid gap-6">
-              <div className="grid gap-2">
+            <CardContent className="grid">
+              {/* <div className="grid gap-2">
                 <Label>Tone</Label>
                 <div className="flex flex-wrap gap-2">
                   {CHATBOT_OPTIONS.tone.map((opt) => (
@@ -685,9 +685,9 @@ export default function ManageChatbotPage() {
                     </label>
                   ))}
                 </div>
-              </div>
+              </div> */}
 
-              <div className="grid gap-2">
+              {/* <div className="grid gap-2">
                 <Label>Humor</Label>
                 <div className="flex flex-wrap gap-2">
                   {CHATBOT_OPTIONS.humor.map((opt) => (
@@ -706,9 +706,9 @@ export default function ManageChatbotPage() {
                     </label>
                   ))}
                 </div>
-              </div>
+              </div> */}
 
-              <div className="grid gap-2">
+              {/* <div className="grid gap-2">
                 <Label>Theme</Label>
                 <div className="flex flex-wrap gap-2">
                   {CHATBOT_OPTIONS.theme.map((opt) => (
@@ -727,9 +727,9 @@ export default function ManageChatbotPage() {
                     </label>
                   ))}
                 </div>
-              </div>
+              </div> */}
 
-              <div className="flex items-center gap-2">
+              {/* <div className="flex items-center gap-2">
                 <input
                   id="allowEmojis"
                   type="checkbox"
@@ -737,13 +737,13 @@ export default function ManageChatbotPage() {
                   onChange={(e) => setAllowEmojis(e.target.checked)}
                 />
                 <Label htmlFor="allowEmojis">Allow emojis in replies</Label>
-              </div>
+              </div> */}
 
               <Separator />
 
               <div className="grid gap-6 md:grid-cols-2">
                 <div className="grid gap-6">
-                  <div className="grid gap-2">
+                  {/* <div className="grid gap-2">
                     <Label>Widget theme mode</Label>
                     <div className="flex flex-wrap gap-2">
                       {(["system", "light", "dark"] as const).map((opt) => (
@@ -765,12 +765,12 @@ export default function ManageChatbotPage() {
                     <div className="text-xs text-muted-foreground">
                       “system” follows the user’s OS/browser preference.
                     </div>
-                  </div>
+                  </div> */}
 
                   <div className="grid gap-3">
-                    <Label>Widget colors</Label>
+                    {/* <Label>Widget colors</Label> */}
 
-                    <div className="grid gap-1">
+                    {/* <div className="grid gap-1">
                       <Label>Primary (button/accent)</Label>
                       <div className="flex items-center gap-3">
                         <Input
@@ -789,9 +789,9 @@ export default function ManageChatbotPage() {
                           placeholder="#111111"
                         />
                       </div>
-                    </div>
+                    </div> */}
 
-                    <div className="grid gap-1">
+                    {/* <div className="grid gap-1">
                       <Label>User bubble</Label>
                       <div className="flex items-center gap-3">
                         <Input
@@ -810,9 +810,9 @@ export default function ManageChatbotPage() {
                           placeholder="#111111"
                         />
                       </div>
-                    </div>
+                    </div> */}
 
-                    <div className="grid gap-1">
+                    {/* <div className="grid gap-1">
                       <Label>Bot bubble</Label>
                       <div className="flex items-center gap-3">
                         <Input
@@ -831,7 +831,7 @@ export default function ManageChatbotPage() {
                           placeholder="#f1f1f1"
                         />
                       </div>
-                    </div>
+                    </div> */}
                   </div>
 
                   <div className="grid gap-2">
@@ -850,7 +850,7 @@ export default function ManageChatbotPage() {
                   </div>
                 </div>
 
-                <div className="grid gap-3">
+                {/* <div className="grid gap-3">
                   <Label>Live widget preview</Label>
                   <div
                     className="rounded-md border p-4"
@@ -939,12 +939,12 @@ export default function ManageChatbotPage() {
                   <div className="text-xs text-muted-foreground">
                     This is a static preview (no network calls).
                   </div>
-                </div>
+                </div> */}
               </div>
 
              
             </CardContent>
-          </Card> */}
+          </Card>
 
            <div className="flex justify-end">
                 <Button onClick={() => void saveSettings()} disabled={saving}>
