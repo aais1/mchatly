@@ -819,7 +819,16 @@ function ChatWidget({ token }: { token: string }) {
                     )}
                   </div>
                 ) : (
-                  msg.text
+                  msg.role === "bot" && msg.text.includes("\n") ? (
+                    msg.text.split("\n").map((line, idx, arr) => (
+                      <span key={idx}>
+                        {line.trim()}
+                        {idx < arr.length - 1 && <br />}
+                      </span>
+                    ))
+                  ) : (
+                    msg.text
+                  )
                 )}
               </div>
             ))}
@@ -884,13 +893,13 @@ function ChatWidget({ token }: { token: string }) {
                 padding: "12px 16px",
                 display: "flex",
                 flexDirection: "column",
+                alignItems: "flex-end",
                 gap: 8,
                 background: isDark ? "#0b0b0b" : "#f8f9fa",
                 borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)"}`,
               }}
             >
-              <div style={{ fontSize: 12, opacity: 0.6, marginBottom: 4 }}>Quick questions:</div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6, maxWidth: "60%", alignItems: "flex-end" }}>
                 {starterQuestions.slice(0, 3).map((q, idx) => (
                   <button
                     key={idx}
@@ -903,8 +912,9 @@ function ChatWidget({ token }: { token: string }) {
                       border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)"}`,
                       cursor: "pointer",
                       fontSize: 13,
-                      textAlign: "left",
+                      textAlign: "right",
                       transition: "all 0.2s",
+                      width: "100%",
                     }}
                   >
                     {q}
