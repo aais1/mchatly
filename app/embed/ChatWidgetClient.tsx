@@ -69,7 +69,6 @@ function ChatWidget({ token }: { token: string }) {
   const isDarkMode = useRef<boolean>(false);
   const popupRef = useRef<HTMLDivElement>(null);
 
-  // Initialize user ID
   useEffect(() => {
     const key = `mchatly:userId:${token}`;
     let uid = localStorage.getItem(key);
@@ -174,7 +173,7 @@ function ChatWidget({ token }: { token: string }) {
     return new Promise((resolve, reject) => {
       if ((window as any).Ably) return resolve((window as any).Ably);
       const script = document.createElement("script");
-      script.src = "https://cdn.ably.com/lib/ably.min-1.js ";
+      script.src = "https://cdn.ably.com/lib/ably.min-1.js";
       script.onload = () => resolve((window as any).Ably);
       script.onerror = () => reject(new Error("Failed to load Ably"));
       document.head.appendChild(script);
@@ -450,23 +449,21 @@ function ChatWidget({ token }: { token: string }) {
     sendMessage(question, "text");
   };
 
-const toggleChat = () => {
-  if (isOpen) {
-    setIsAnimating(true);
-    setTimeout(() => {
-      setIsOpen(false);
-      setIsAnimating(false);
-      // Tell parent to shrink
-      window.parent?.postMessage({ type: 'mchatly:close' }, '*');
-    }, 300);
-  } else {
-    setIsOpen(true);
-    setIsAnimating(true);
-    // Tell parent to expand
-    window.parent?.postMessage({ type: 'mchatly:open' }, '*');
-    setTimeout(() => setIsAnimating(false), 300);
-  }
-};
+  const toggleChat = () => {
+    if (isOpen) {
+      setIsAnimating(true);
+      setTimeout(() => {
+        setIsOpen(false);
+        setIsAnimating(false);
+        window.parent?.postMessage({ type: 'mchatly:close' }, '*');
+      }, 300);
+    } else {
+      setIsOpen(true);
+      setIsAnimating(true);
+      window.parent?.postMessage({ type: 'mchatly:open' }, '*');
+      setTimeout(() => setIsAnimating(false), 300);
+    }
+  };
 
   useEffect(() => {
     const init = async () => {
@@ -660,7 +657,7 @@ const toggleChat = () => {
             pointerEvents: isOpen ? "auto" : "none",
           }}
         >
-          {/* User Info Modal - MOVED INSIDE and positioned absolutely */}
+          {/* User Info Modal */}
           {showUserInfoModal && (
             <div
               style={{
@@ -766,6 +763,7 @@ const toggleChat = () => {
               alignItems: "center",
               justifyContent: "space-between",
               background: isDark ? "#1a1a1a" : "#fff",
+              flexShrink: 0,
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -826,202 +824,193 @@ const toggleChat = () => {
             </button>
           </div>
 
-          {/* Messages */}
+          {/* Main chat area - flex container for messages + starter questions */}
           <div
-            ref={bodyRef}
             style={{
               flex: 1,
               display: "flex",
               flexDirection: "column",
-              padding: 16,
-              gap: 12,
-              overflow: "auto",
+              overflow: "hidden",
               background: isDark ? "#0b0b0b" : "#f8f9fa",
             }}
           >
-            {messages.length === 0 && !loading && (
-              <div style={{ color: "#888", textAlign: "center", marginTop: 40 }}>
-                <b>No messages yet.</b>
-              </div>
-            )}
-
-            {messages.map((msg, i) => (
-              <div
-                key={msg._id || i}
-                style={{
-                  alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
-                  background:
-                    msg.role === "user"
-                      ? "var(--mchatly-user-bubble, #111)"
-                      : "var(--mchatly-bot-bubble, #fff)",
-                  color:
-                    msg.role === "user"
-                      ? "var(--mchatly-user-text, #fff)"
-                      : "var(--mchatly-bot-text, #111)",
-                  borderRadius: msg.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
-                  padding: msg.type === "image" || msg.type === "voice" ? 4 : "12px 16px",
-                  maxWidth: "85%",
-                  wordBreak: "break-word",
-               
-                  fontSize: 14,
-                  lineHeight: 1.5,
-                }}
-              >
-                {msg.type === "image" ? (
-                  <div>
-                    <img
-                      src={msg.text}
-                      alt={msg.filename || "Shared image"}
-                      style={{ 
-                        maxWidth: 200, 
-                        maxHeight: 160, 
-                        borderRadius: 12,
-                        display: "block",
-                        cursor: "pointer"
-                      }}
-                      onClick={() => setSelectedImage(msg.text)}
-                      loading="lazy"
-                    />
-                    {msg.filename && (
-                      <div style={{ 
-                        fontSize: 10, 
-                        opacity: 0.7, 
-                        marginTop: 6,
-                        textAlign: "center" 
-                      }}>
-                        {msg.filename}
-                      </div>
-                    )}
-                  </div>
-                ) : msg.type === "voice" ? (
-                  <div style={{ padding: "4px 8px" }}>
-                    <audio 
-                      controls 
-                      style={{ 
-                        maxWidth: 220,
-                        height: 36
-                      }}
-                    >
-                      <source src={msg.text} type="audio/webm" />
-                      <source src={msg.text} type="audio/mp3" />
-                      Your browser does not support the audio element.
-                    </audio>
-                    {msg.duration && (
-                      <div style={{ 
-                        fontSize: 10, 
-                        opacity: 0.7, 
-                        marginTop: 4,
-                        textAlign: "center" 
-                      }}>
-                        {formatDuration(msg.duration)}
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  msg.role === "bot" && msg.text.includes("\n") ? (
-                    msg.text.split("\n").map((line, idx, arr) => (
-                      <span key={idx}>
-                        {line.trim()}
-                        {idx < arr.length - 1 && <br />}
-                      </span>
-                    ))
-                  ) : (
-                    msg.text
-                  )
-                )}
-              </div>
-            ))}
-
-            {loading && (
-              <div
-                style={{
-                  alignSelf: "flex-start",
-                  background: "var(--mchatly-bot-bubble, #fff)",
-                  color: "var(--mchatly-bot-text, #111)",
-                  borderRadius: "18px 18px 18px 4px",
-                  padding: "12px 16px",
-                  maxWidth: "85%",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 4,
-                }}
-              >
-                <span style={{ display: "flex", gap: 3 }}>
-                  <span
-                    style={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: "50%",
-                      background: "currentColor",
-                      opacity: 0.4,
-                      animation: "bounce 1.4s infinite ease-in-out both",
-                      animationDelay: "0s",
-                    }}
-                  />
-                  <span
-                    style={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: "50%",
-                      background: "currentColor",
-                      opacity: 0.4,
-                      animation: "bounce 1.4s infinite ease-in-out both",
-                      animationDelay: "0.16s",
-                    }}
-                  />
-                  <span
-                    style={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: "50%",
-                      background: "currentColor",
-                      opacity: 0.4,
-                      animation: "bounce 1.4s infinite ease-in-out both",
-                      animationDelay: "0.32s",
-                    }}
-                  />
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Starter Questions */}
-          {starterQuestions.length > 0 && (
+            {/* Scrollable messages area */}
             <div
+              ref={bodyRef}
               style={{
-                padding: "12px 16px",
+                flex: 1,
                 display: "flex",
                 flexDirection: "column",
-                alignItems: "flex-end",
-                gap: 8,
-                background: isDark ? "#0b0b0b" : "#f8f9fa",
-                borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)"}`,
+                padding: 16,
+                gap: 12,
+                overflowY: "auto",
+                overflowX: "hidden",
               }}
             >
-              <div style={{ display: "flex", flexDirection: "column", gap: 6, maxWidth: "60%", alignItems: "flex-end" }}>
-                {starterQuestions.slice(0, 3).map((q, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => handleStarterClick(q, idx)}
-                    style={{
-                      padding: "10px 14px",
-                      borderRadius: 12,
-                      background: isDark ? "rgba(255,255,255,0.1)" : "#fff",
-                      color: "#ffff",
-                      border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)"}`,
-                      cursor: "pointer",
-                      fontSize: 13,
-                      textAlign: "right",
-                      transition: "all 0.2s",
-                      width: "100%",
-                    }}
-                  >
-                    {q}
-                  </button>
-                ))}
+              {messages.length === 0 && !loading && (
+                <div style={{ color: "#888", textAlign: "center", marginTop: 40 }}>
+                  <b>No messages yet.</b>
+                </div>
+              )}
+
+              {messages.map((msg, i) => (
+
+                
+                
+             
+                <div
+                  key={msg._id || i}
+                  style={{
+                    alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
+                    background:
+                      msg.role === "user"
+                        ? "var(--mchatly-user-bubble, #111)"
+                        : "var(--mchatly-bot-bubble, #fff)",
+                    color:
+                      msg.role === "user"
+                        ? "var(--mchatly-user-text, #fff)"
+                        : "var(--mchatly-bot-text, #111)",
+                    borderRadius: msg.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
+                    padding: msg.type === "image" || msg.type === "voice" ? 4 : "12px 16px",
+                    maxWidth: "85%",
+                    wordBreak: "break-word",
+                    fontSize: 14,
+                    lineHeight: 1.5,
+                  }}
+                >
+                  {msg.type === "image" ? (
+                    <div>
+                      <img
+                        src={msg.text}
+                        alt={msg.filename || "Shared image"}
+                        style={{ 
+                          maxWidth: 200, 
+                          maxHeight: 160, 
+                          borderRadius: 12,
+                          display: "block",
+                          cursor: "pointer"
+                        }}
+                        onClick={() => setSelectedImage(msg.text)}
+                        loading="lazy"
+                      />
+                      {msg.filename && (
+                        <div style={{ 
+                          fontSize: 10, 
+                          opacity: 0.7, 
+                          marginTop: 6,
+                          textAlign: "center" 
+                        }}>
+                          {msg.filename}
+                        </div>
+                      )}
+                    </div>
+                  ) : msg.type === "voice" ? (
+                    <div style={{ padding: "4px 8px" }}>
+                      <audio 
+                        controls 
+                        style={{ 
+                          maxWidth: 220,
+                          height: 36
+                        }}
+                      >
+                        <source src={msg.text} type="audio/webm" />
+                        <source src={msg.text} type="audio/mp3" />
+                        Your browser does not support the audio element.
+                      </audio>
+                      {msg.duration && (
+                        <div style={{ 
+                          fontSize: 10, 
+                          opacity: 0.7, 
+                          marginTop: 4,
+                          textAlign: "center" 
+                        }}>
+                          {formatDuration(msg.duration)}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    msg.role === "bot" && msg.text.includes("\n") ? (
+                      msg.text.split("\n").map((line, idx, arr) => (
+                        <span key={idx}>
+                          {line.trim()}
+                          {idx < arr.length - 1 && <br />}
+                        </span>
+                      ))
+                    ) : (
+                      msg.text
+                    )
+                  )}
+                </div>
+
+       
+
+              ))}
+
+               {loading && (
+                <div
+                  style={{
+                    alignSelf: "flex-start",
+                    background: "var(--mchatly-bot-bubble, #fff)",
+                    color: "var(--mchatly-bot-text, #111)",
+                    borderRadius: "18px 18px 18px 4px",
+                    padding: "12px 16px",
+                    maxWidth: "85%",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4,
+                  }}
+                >
+                  <span style={{ display: "flex", gap: 3 }}>
+                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: "currentColor", opacity: 0.4, animation: "bounce 1.4s infinite ease-in-out both", animationDelay: "0s" }} />
+                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: "currentColor", opacity: 0.4, animation: "bounce 1.4s infinite ease-in-out both", animationDelay: "0.16s" }} />
+                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: "currentColor", opacity: 0.4, animation: "bounce 1.4s infinite ease-in-out both", animationDelay: "0.32s" }} />
+                  </span>
+                </div>
+              )}
+
+                   {starterQuestions.length > 0 && (
+              <div
+                style={{
+                  padding: "12px 16px",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "flex-end",
+                  gap: 8,
+                  background: isDark ? "#0b0b0b" : "#f8f9fa",
+                  borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)"}`,
+                  flexShrink: 0,
+                }}
+              >
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, maxWidth: "60%", alignItems: "flex-end" }}>
+                  {starterQuestions.slice(0, 3).map((q, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => handleStarterClick(q, idx)}
+                      style={{
+                        padding: "10px 14px",
+                        borderRadius: 12,
+                        background: isDark ? "rgba(255,255,255,0.1)" : "#fff",
+                        color: isDark ? "#fff" : "#111",
+                        border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)"}`,
+                        cursor: "pointer",
+                        fontSize: 13,
+                        textAlign: "right",
+                        transition: "all 0.2s",
+                        width: "100%",
+                      }}
+                    >
+                      {q}
+                    </button>
+                  ))}
+                </div>
               </div>
+            )}
+
+             
             </div>
-          )}
+
+         
+          </div>
 
           {/* Input Form */}
           <form
@@ -1032,6 +1021,7 @@ const toggleChat = () => {
               display: "flex",
               gap: 10,
               background: isDark ? "#1a1a1a" : "#fff",
+              flexShrink: 0,
             }}
           >
             <input
@@ -1085,6 +1075,7 @@ const toggleChat = () => {
               opacity: 0.5,
               textAlign: "center",
               background: isDark ? "#1a1a1a" : "#fff",
+              flexShrink: 0,
             }}
           >
             Powered by <a href={process.env.SITE_URL} style={{ color: "inherit" }}>mchatly</a>
@@ -1094,7 +1085,6 @@ const toggleChat = () => {
 
       <ImageModal />
 
-      {/* CSS for typing animation */}
       <style jsx global>{`
         @keyframes bounce {
           0%, 80%, 100% {

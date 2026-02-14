@@ -33,9 +33,7 @@ export async function GET(req: Request) {
     '<form class="mchatly-form">' +
     '<input class="mchatly-input" placeholder="Type a message..." />' +
     '<button class="mchatly-send" type="submit">Send</button>' +
-    "</form>" +
-    '<div class="mchatly-footer"><a href="https://mchatly.com" target="_blank" rel="noreferrer">Powered by mchatly</a></div>';
-
+    "</form>";
   const js =
     "(() => {\n" +
     `  const TOKEN = ${JSON.stringify(token)};\n` +
