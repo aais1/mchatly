@@ -61,6 +61,7 @@ function ChatWidget({ token }: { token: string }) {
   const [didShowWelcome, setDidShowWelcome] = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [whatsappError, setWhatsappError] = useState<string | null>(null);
   
   const bodyRef = useRef<HTMLDivElement>(null);
   const realtimeRef = useRef<any>(null);
@@ -122,22 +123,32 @@ function ChatWidget({ token }: { token: string }) {
     return { name, whatsapp };
   }, [token]);
 
-  const handleUserInfoSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const name = (e.currentTarget as HTMLFormElement).userName.value.trim();
-    const whatsapp = (e.currentTarget as HTMLFormElement).userWhatsapp.value.trim();
+const handleUserInfoSubmit = (e: React.FormEvent) => {
+  e.preventDefault();
+  const name = (e.currentTarget as HTMLFormElement).userName.value.trim();
+  const whatsapp = (e.currentTarget as HTMLFormElement).userWhatsapp.value.trim();
 
-    if (!name || !whatsapp) {
-      return;
-    }
+  if (!name || !whatsapp) {
+    return;
+  }
 
-    const nameKey = `mchatly:name:${token}`;
-    const whatsappKey = `mchatly:whatsapp:${token}`;
-    localStorage.setItem(nameKey, name);
-    localStorage.setItem(whatsappKey, whatsapp);
-    setShowUserInfoModal(false);
-    setUserInfo({ name, whatsapp });
-  };
+  // Validate WhatsApp number - must be more than 9 digits
+  const digitsOnly = whatsapp.replace(/\D/g, '');
+  if (digitsOnly.length <= 9) {
+    setWhatsappError('WhatsApp number must be greater than 9 digits');
+    return;
+  }
+
+  // Clear error if valid
+  setWhatsappError(null);
+
+  const nameKey = `mchatly:name:${token}`;
+  const whatsappKey = `mchatly:whatsapp:${token}`;
+  localStorage.setItem(nameKey, name);
+  localStorage.setItem(whatsappKey, whatsapp);
+  setShowUserInfoModal(false);
+  setUserInfo({ name, whatsapp });
+};
 
   const safeHexColor = (v: string | undefined): string | null => {
     if (typeof v !== "string") return null;
@@ -711,23 +722,36 @@ function ChatWidget({ token }: { token: string }) {
                     onFocus={(e) => (e.target.style.borderColor = primaryColor)}
                     onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")}
                   />
-                  <input
-                    name="userWhatsapp"
-                    placeholder="WhatsApp Number"
-                    type="tel"
-                    required
-                    style={{
-                      padding: 14,
-                      borderRadius: 12,
-                      border: "1px solid #e5e7eb",
-                      fontSize: 15,
-                      width: "100%",
-                      outline: "none",
-                      transition: "border-color 0.2s",
-                    }}
-                    onFocus={(e) => (e.target.style.borderColor = primaryColor)}
-                    onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")}
-                  />
+              <input
+  name="userWhatsapp"
+  placeholder="WhatsApp Number"
+  type="tel"
+  required
+  onChange={(e) => {
+    // Clear error when user types
+    if (whatsappError) setWhatsappError(null);
+  }}
+  style={{
+    padding: 14,
+    borderRadius: 12,
+    border: `1px solid ${whatsappError ? '#ef4444' : '#e5e7eb'}`,
+    fontSize: 15,
+    width: "100%",
+    outline: "none",
+    transition: "border-color 0.2s",
+  }}
+  onFocus={(e) => {
+    if (!whatsappError) e.target.style.borderColor = primaryColor;
+  }}
+  onBlur={(e) => {
+    if (!whatsappError) e.target.style.borderColor = "#e5e7eb";
+  }}
+/>
+{whatsappError && (
+  <div style={{ color: '#ef4444', fontSize: 12, marginTop: -8 }}>
+    {whatsappError}
+  </div>
+)}
                 </div>
                 <button
                   type="submit"
