@@ -603,6 +603,20 @@ const handleUserInfoSubmit = (e: React.FormEvent) => {
   const primaryColor = theme?.primary || "#111";
   const isDark = isDarkMode.current;
 
+  // Custom chat bubble colors
+  const botBubbleColor = "rgba(201,235,208,1)";
+  const userBubbleColor = "rgba(204,220,246,1)";
+  const chatBgColor = "rgba(255,255,255,1)";
+
+  // Responsive: detect mobile
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 640);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   return (
     <>
       {/* Floating Button */}
@@ -611,10 +625,10 @@ const handleUserInfoSubmit = (e: React.FormEvent) => {
           onClick={toggleChat}
           style={{
             position: "fixed",
-            bottom: 24,
-            right: 24,
-            width: 50,
-            height: 50,
+            bottom: isMobile ? 10 : 24,
+            right: isMobile ? 10 : 24,
+            width: isMobile ? 38 : 50,
+            height: isMobile ? 38 : 50,
             borderRadius: "50%",
             background: primaryColor,
             color: "#fff",
@@ -629,8 +643,8 @@ const handleUserInfoSubmit = (e: React.FormEvent) => {
           }}
         >
           <svg
-            width="28"
-            height="28"
+            width={isMobile ? 18 : 28}
+            height={isMobile ? 18 : 28}
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -649,16 +663,17 @@ const handleUserInfoSubmit = (e: React.FormEvent) => {
           ref={popupRef}
           style={{
             position: "fixed",
-            bottom: 24,
-            right: 24,
-            width: 356,
-            height: 600,
-            maxHeight: "calc(100vh - 48px)",
-            borderRadius: 20,
+            bottom: isMobile ? 30 : 24,
+            right: isMobile ? 8 : 24,
+            width: isMobile ? 310 : 340,
+            height: isMobile ? 440 : 520,
+            maxHeight: isMobile ? 'calc(100vh - 56px)' : 'calc(100vh - 48px)',
+            borderRadius: isMobile ? 10 : 18,
             overflow: "hidden",
-            background: "var(--mchatly-panel-bg, #fff)",
-            color: "var(--mchatly-panel-text, #111)",
+            background: chatBgColor,
+            color: "#111",
             fontFamily: "system-ui",
+            fontSize: isMobile ? 12 : 14,
             zIndex: 9999,
             display: "flex",
             flexDirection: "column",
@@ -668,6 +683,7 @@ const handleUserInfoSubmit = (e: React.FormEvent) => {
               : "scale(0.8) translateY(20px)",
             transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
             pointerEvents: isOpen ? "auto" : "none",
+            boxShadow: '0 4px 24px 0 rgba(0,0,0,0.10)',
           }}
         >
           {/* User Info Modal */}
@@ -783,45 +799,53 @@ const handleUserInfoSubmit = (e: React.FormEvent) => {
           {/* Header */}
           <div
             style={{
-              padding: "16px 20px",
+              padding: isMobile ? "10px 12px" : "16px 20px",
               borderBottom: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)"}`,
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              background: isDark ? "#1a1a1a" : "#fff",
+              background: chatBgColor,
               flexShrink: 0,
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 7 : 12 }}>
               <div
                 style={{
-                  width: 40,
-                  height: 40,
+                  width: isMobile ? 36 : 54,
+                  height: isMobile ? 36 : 54,
                   borderRadius: "50%",
-                  background: primaryColor,
+                  overflow: "hidden",
+                  background: "#e5e7eb",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  color: "#fff",
                 }}
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                </svg>
+                <img
+                  src="/ahan.jpeg"
+                  alt="Ahan Chaudhry"
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    borderRadius: '50%',
+                    display: 'block',
+                  }}
+                />
               </div>
               <div>
-                <div style={{ fontWeight: 700, fontSize: 16 }}>Chat Support</div>
-                <div style={{ fontSize: 12, opacity: 0.6, display: "flex", alignItems: "center", gap: 4 }}>
+                <div style={{ fontWeight: 700, fontSize: isMobile ? 12 : 16 }}>Chat Support</div>
+                <div style={{ fontSize: isMobile ? 10 : 12, opacity: 0.6, display: "flex", alignItems: "center", gap: 4 }}>
                   <span
                     style={{
-                      width: 8,
-                      height: 8,
+                      width: isMobile ? 6 : 8,
+                      height: isMobile ? 6 : 8,
                       borderRadius: "50%",
                       background: adminActive ? "#22c55e" : "#9ca3af",
                       display: "inline-block",
                     }}
                   />
-                  {adminActive ? "Online" : "Bot"}
+                  {adminActive ? "Online" : "Ahan Chaudhry"}
                 </div>
               </div>
             </div>
@@ -836,14 +860,15 @@ const handleUserInfoSubmit = (e: React.FormEvent) => {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                color: "var(--mchatly-panel-text, #111)",
-                opacity: 0.6,
+                color: "#28374a",
+                opacity: 0.8,
                 transition: "opacity 0.2s",
               }}
+              aria-label="Close chat"
               onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
-              onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.6")}
+              onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.8")}
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#28374a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18" />
                 <line x1="6" y1="6" x2="18" y2="18" />
               </svg>
@@ -857,7 +882,8 @@ const handleUserInfoSubmit = (e: React.FormEvent) => {
               display: "flex",
               flexDirection: "column",
               overflow: "hidden",
-              background: isDark ? "#0b0b0b" : "#f8f9fa",
+              background: "rgba(255,255,255,1)",
+              fontSize: isMobile ? 12 : 14,
             }}
           >
             {/* Scrollable messages area */}
@@ -867,8 +893,8 @@ const handleUserInfoSubmit = (e: React.FormEvent) => {
                 flex: 1,
                 display: "flex",
                 flexDirection: "column",
-                padding: 16,
-                gap: 12,
+                padding: isMobile ? 8 : 16,
+                gap: isMobile ? 6 : 12,
                 overflowY: "auto",
                 overflowX: "hidden",
               }}
@@ -888,20 +914,14 @@ const handleUserInfoSubmit = (e: React.FormEvent) => {
                   key={msg._id || i}
                   style={{
                     alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
-                    background:
-                      msg.role === "user"
-                        ? "var(--mchatly-user-bubble, #111)"
-                        : "var(--mchatly-bot-bubble, #fff)",
-                    color:
-                      msg.role === "user"
-                        ? "var(--mchatly-user-text, #fff)"
-                        : "var(--mchatly-bot-text, #111)",
-                    borderRadius: msg.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
-                    padding: msg.type === "image" || msg.type === "voice" ? 4 : "12px 16px",
-                    maxWidth: "85%",
+                    background: msg.role === "user" ? userBubbleColor : botBubbleColor,
+                    color: "#111",
+                    borderRadius: msg.role === "user" ? "14px 14px 4px 14px" : "14px 14px 14px 4px",
+                    padding: msg.type === "image" || msg.type === "voice" ? (isMobile ? 2 : 4) : (isMobile ? "7px 10px" : "12px 16px"),
+                    maxWidth: isMobile ? "95%" : "85%",
                     wordBreak: "break-word",
-                    fontSize: 14,
-                    lineHeight: 1.5,
+                    fontSize: isMobile ? 12 : 14,
+                    lineHeight: 1.4,
                   }}
                 >
                   {msg.type === "image" ? (
@@ -910,9 +930,9 @@ const handleUserInfoSubmit = (e: React.FormEvent) => {
                         src={msg.text}
                         alt={msg.filename || "Shared image"}
                         style={{ 
-                          maxWidth: 200, 
-                          maxHeight: 160, 
-                          borderRadius: 12,
+                          maxWidth: isMobile ? 120 : 200, 
+                          maxHeight: isMobile ? 90 : 160, 
+                          borderRadius: isMobile ? 8 : 12,
                           display: "block",
                           cursor: "pointer"
                         }}
@@ -921,9 +941,9 @@ const handleUserInfoSubmit = (e: React.FormEvent) => {
                       />
                       {msg.filename && (
                         <div style={{ 
-                          fontSize: 10, 
+                          fontSize: isMobile ? 8 : 10, 
                           opacity: 0.7, 
-                          marginTop: 6,
+                          marginTop: isMobile ? 3 : 6,
                           textAlign: "center" 
                         }}>
                           {msg.filename}
@@ -931,12 +951,12 @@ const handleUserInfoSubmit = (e: React.FormEvent) => {
                       )}
                     </div>
                   ) : msg.type === "voice" ? (
-                    <div style={{ padding: "4px 8px" }}>
+                    <div style={{ padding: isMobile ? "2px 4px" : "4px 8px" }}>
                       <audio 
                         controls 
                         style={{ 
-                          maxWidth: 220,
-                          height: 36
+                          maxWidth: isMobile ? 110 : 220,
+                          height: isMobile ? 20 : 36
                         }}
                       >
                         <source src={msg.text} type="audio/webm" />
@@ -945,9 +965,9 @@ const handleUserInfoSubmit = (e: React.FormEvent) => {
                       </audio>
                       {msg.duration && (
                         <div style={{ 
-                          fontSize: 10, 
+                          fontSize: isMobile ? 7 : 10, 
                           opacity: 0.7, 
-                          marginTop: 4,
+                          marginTop: isMobile ? 2 : 4,
                           textAlign: "center" 
                         }}>
                           {formatDuration(msg.duration)}
@@ -996,30 +1016,30 @@ const handleUserInfoSubmit = (e: React.FormEvent) => {
 
                    {starterQuestions.length > 0 && (
               <div
-                style={{
-                  padding: "12px 16px",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "flex-end",
-                  gap: 8,
-                  background: isDark ? "#0b0b0b" : "#f8f9fa",
-                  borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)"}`,
-                  flexShrink: 0,
-                }}
+                  style={{
+                    padding: isMobile ? "7px 10px" : "12px 16px",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "flex-end",
+                    gap: isMobile ? 4 : 8,
+                    background: isDark ? "#0b0b0b" : "#f8f9fa",
+                    borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)"}`,
+                    flexShrink: 0,
+                  }}
               >
-                <div style={{ display: "flex", flexDirection: "column", gap: 6, maxWidth: "60%", alignItems: "flex-end" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 3 : 6, maxWidth: isMobile ? "90%" : "60%", alignItems: "flex-end" }}>
                   {starterQuestions.slice(0, 3).map((q, idx) => (
                     <button
                       key={idx}
                       onClick={() => handleStarterClick(q)}
                       style={{
-                        padding: "10px 14px",
-                        borderRadius: 12,
+                        padding: isMobile ? "6px 10px" : "10px 14px",
+                        borderRadius: isMobile ? 8 : 12,
                         background: isDark ? "rgba(255,255,255,0.1)" : "#fff",
                         color: isDark ? "#fff" : "#111",
                         border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)"}`,
                         cursor: "pointer",
-                        fontSize: 13,
+                        fontSize: isMobile ? 11 : 13,
                         textAlign: "right",
                         transition: "all 0.2s",
                         width: "100%",
@@ -1042,11 +1062,11 @@ const handleUserInfoSubmit = (e: React.FormEvent) => {
           <form
             onSubmit={handleSubmit}
             style={{
-              padding: "12px 16px",
+              padding: isMobile ? "7px 10px" : "12px 16px",
               borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)"}`,
               display: "flex",
-              gap: 10,
-              background: isDark ? "#1a1a1a" : "#fff",
+              gap: isMobile ? 5 : 10,
+              background: "#fff",
               flexShrink: 0,
             }}
           >
@@ -1057,12 +1077,12 @@ const handleUserInfoSubmit = (e: React.FormEvent) => {
               style={{
                 flex: 1,
                 border: `1px solid ${isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)"}`,
-                borderRadius: 24,
-                padding: "12px 16px",
+                borderRadius: 18,
+                padding: isMobile ? "7px 10px" : "12px 16px",
                 font: "inherit",
-                fontSize: 14,
-                background: isDark ? "#0b0b0b" : "#fff",
-                color: "var(--mchatly-panel-text, #111)",
+                fontSize: isMobile ? 12 : 14,
+                background: "rgba(240,241,243,1)",
+                color: "#111",
                 outline: "none",
               }}
               disabled={loading}
@@ -1070,12 +1090,12 @@ const handleUserInfoSubmit = (e: React.FormEvent) => {
             <button
               type="submit"
               style={{
-                background: primaryColor,
-                color: "#fff",
+                background: "rgba(240,241,243,1)",
+                color: "#111",
                 border: "none",
                 borderRadius: "50%",
-                width: 44,
-                height: 44,
+                width: isMobile ? 30 : 44,
+                height: isMobile ? 30 : 44,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -1085,7 +1105,7 @@ const handleUserInfoSubmit = (e: React.FormEvent) => {
               }}
               disabled={loading || !input.trim()}
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg width={isMobile ? 13 : 20} height={isMobile ? 13 : 20} viewBox="0 0 24 24" fill="none" stroke="rgba(40,55,74,1)" strokeWidth="2.7" style={{display:'block'}}>
                 <line x1="22" y1="2" x2="11" y2="13" />
                 <polygon points="22 2 15 22 11 13 2 9 22 2" />
               </svg>
@@ -1093,19 +1113,7 @@ const handleUserInfoSubmit = (e: React.FormEvent) => {
           </form>
 
           {/* Footer */}
-          <div
-            style={{
-              padding: "8px 16px",
-              borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)"}`,
-              fontSize: 11,
-              opacity: 0.5,
-              textAlign: "center",
-              background: isDark ? "#1a1a1a" : "#fff",
-              flexShrink: 0,
-            }}
-          >
-            Powered by <a href={process.env.SITE_URL} style={{ color: "inherit" }}>mchatly</a>
-          </div>
+          {/* Footer removed as requested */}
         </div>
       )}
 

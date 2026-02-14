@@ -131,19 +131,25 @@ export function LiveChats({ chatbotId }: Readonly<{ chatbotId: string }>) {
   const realtimeRef = useRef<RealtimeClient | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const lastSessionRef = useRef<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalSessions, setTotalSessions] = useState(0);
 
   const selectedSession = useMemo(
     () => sessions.find((s) => s.sessionId === selectedSessionId) ?? null,
     [sessions, selectedSessionId]
   );
 
-  async function loadSessions() {
+  async function loadSessions(newPage = page) {
     setLoadingSessions(true);
     try {
-      const res = await fetch(`/api/user/chatbots/${chatbotId}/live-chats`);
+      const res = await fetch(`/api/user/chatbots/${chatbotId}/live-chats?page=${newPage}`);
       const data = await res.json().catch(() => ({}));
       if (res.ok && Array.isArray(data?.sessions)) {
         setSessions(data.sessions as SessionRow[]);
+        setPage(data.page || 1);
+        setTotalPages(data.totalPages || 1);
+        setTotalSessions(data.total || 0);
       }
     } finally {
       setLoadingSessions(false);
@@ -189,7 +195,7 @@ export function LiveChats({ chatbotId }: Readonly<{ chatbotId: string }>) {
   }
 
   useEffect(() => {
-    void loadSessions();
+    void loadSessions(1);
     if (initialSessionId) {
       setSelectedSessionId(initialSessionId);
       void loadMessages(initialSessionId);
@@ -640,28 +646,31 @@ export function LiveChats({ chatbotId }: Readonly<{ chatbotId: string }>) {
     );
   } else {
     sessionsContent = (
-      <div className="grid gap-2">
-        {sessions.map((s) => (
-          <button
-            key={s.sessionId}
-            type="button"
-            onClick={() => setSelectedSessionId(s.sessionId)}
-            className={cn(
-              "rounded-md border overflow-hidden px-3 py-2 text-left text-sm",
-              selectedSessionId === s.sessionId
-                ? "border-primary/60 bg-primary/10"
-                : "hover:bg-accent"
-            )}
-          >
-            <div className="font-medium truncate">Session: {s.sessionId}</div>
-            <div className="text-xs text-muted-foreground truncate">Name: {s.name || "Unknown"}</div>
-            <div className="text-xs text-muted-foreground truncate">WhatsApp: {s.whatsapp || "Unknown"}</div>
-            <div className="text-xs text-muted-foreground truncate">
-              {formatWhere(s)}
-            </div>
-          </button>
-        ))}
-      </div>
+      <>
+        <div className="grid gap-2">
+          {sessions.map((s) => (
+            <button
+              key={s.sessionId}
+              type="button"
+              onClick={() => setSelectedSessionId(s.sessionId)}
+              className={cn(
+                "rounded-md border overflow-hidden px-3 py-2 text-left text-sm",
+                selectedSessionId === s.sessionId
+                  ? "border-primary/60 bg-primary/10"
+                  : "hover:bg-accent"
+              )}
+            >
+              <div className="font-medium truncate">Session: {s.sessionId}</div>
+              <div className="text-xs text-muted-foreground truncate">Name: {s.name || "Unknown"}</div>
+              <div className="text-xs text-muted-foreground truncate">WhatsApp: {s.whatsapp || "Unknown"}</div>
+              <div className="text-xs text-muted-foreground truncate">
+                {formatWhere(s)}
+              </div>
+            </button>
+          ))}
+        </div>
+       
+      </>
     );
   }
 
@@ -710,15 +719,40 @@ export function LiveChats({ chatbotId }: Readonly<{ chatbotId: string }>) {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-4">
-      <div className="rounded-lg border bg-background p-3">
+      <div>
+      <div className="rounded-lg border bg-background p-3 h-[75vh] overflow-y-scroll">
         <div className="flex items-center justify-between mb-2">
           <div className="text-sm font-medium">Live sessions</div>
-          <Button type="button" variant="outline" size="sm" onClick={loadSessions}>
+          <Button type="button" variant="outline" size="sm" onClick={() => loadSessions(1)}>
             Refresh
           </Button>
         </div>
         {sessionsContent}
       </div>
+       <div className="flex items-center justify-between mt-2 gap-2">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={page <= 1 || loadingSessions}
+            onClick={() => loadSessions(page - 1)}
+          >
+            Previous
+          </Button>
+          <span className="text-xs text-muted-foreground">
+            Page {page} of {totalPages} ({totalSessions} total)
+          </span>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={page >= totalPages || loadingSessions}
+            onClick={() => loadSessions(page + 1)}
+          >
+            Next
+          </Button>
+        </div>
+        </div>
 
       <div className="rounded-lg border bg-background p-3 flex flex-col h-[75vh]">
         {selectedSession === null ? (

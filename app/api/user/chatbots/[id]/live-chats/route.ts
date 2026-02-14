@@ -1,18 +1,17 @@
-import { z } from "zod";
 
+import { z } from "zod";
 import { requireUser } from "@/lib/auth/server";
 import { connectToDatabase } from "@/lib/db/mongoose";
 import { jsonError, jsonOk } from "@/lib/http";
 import { Chatbot } from "@/lib/models/Chatbot";
 import { WidgetSession } from "@/lib/models/WidgetSession";
-import { partial } from "zod/mini";
 
 const ParamsSchema = z.object({
   id: z.string().min(1),
 });
 
 export async function GET(
-  _req: Request,
+  req: Request,
   context: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -25,7 +24,12 @@ export async function GET(
 
     await connectToDatabase();
 
-    console.log('chatbot id might be here ',params)
+    // Parse pagination params
+    const url = new URL(req.url, "http://localhost");
+    const page = Math.max(1, parseInt(url.searchParams.get("page") || "1", 10));
+    const limit = Math.max(1, Math.min(50, parseInt(url.searchParams.get("limit") || "10", 10)));
+    const skip = (page - 1) * limit;
+
     const chatbot = await Chatbot.findOne({
       _id: parsed.data.id,
       ownerId: user.id,
@@ -35,10 +39,12 @@ export async function GET(
 
     if (!chatbot) return jsonError("Not found", 404);
 
+    const total = await WidgetSession.countDocuments({ chatbotToken: chatbot.token });
     const sessions = await WidgetSession.find({ chatbotToken: chatbot.token })
-  .sort({ lastSeenAt: -1 })
-  .limit(200)
-  .lean();
+      .sort({ lastSeenAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
 
     return jsonOk({
       sessions: sessions.map((s) => ({
@@ -60,6 +66,10 @@ export async function GET(
         language: s.language ?? null,
         timezone: s.timezone ?? null,
       })),
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
     });
   } catch {
     return jsonError("Unauthenticated", 401);

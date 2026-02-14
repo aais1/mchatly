@@ -102,6 +102,7 @@ export default function ManageChatbotPage() {
   const [editingFileText, setEditingFileText] = useState("");
 
   const [faqs, setFaqs] = useState<UiFAQ[]>([]);
+  const [openFaqId, setOpenFaqId] = useState<string | null>(null);
 
   const [widgetThemeMode, setWidgetThemeMode] = useState<
     "light" | "dark" | "system"
@@ -426,7 +427,7 @@ export default function ManageChatbotPage() {
               >
                 <TabsList>
                   <TabsTrigger value="text">Text</TabsTrigger>
-                  <TabsTrigger value="documents">Documents</TabsTrigger>
+                  {/* <TabsTrigger value="documents">Documents</TabsTrigger> */}
                   <TabsTrigger value="faq">FAQ</TabsTrigger>
                 </TabsList>
 {
@@ -595,63 +596,72 @@ export default function ManageChatbotPage() {
                       No FAQs yet.
                     </div>
                   ) : (
-                    <div className="grid gap-3">
-                      {faqs.map((f, idx) => (
-                        <div key={f.id} className="rounded-md border p-3">
-                          <div className="flex items-center justify-between">
-                            <div className="text-sm font-medium">
-                              Q&A #{idx + 1}
-                            </div>
-                            <Button
-                              variant="destructive"
-                              size="sm"
+                    <div className="grid gap-2">
+                      {faqs.map((f, idx) => {
+                        const isOpen = openFaqId === f.id;
+                        return (
+                          <div key={f.id} className="rounded-md border">
+                            <button
                               type="button"
-                              onClick={() =>
-                                setFaqs((prev) =>
-                                  prev.filter((x) => x.id !== f.id)
-                                )
-                              }
+                              className="w-full flex items-center justify-between px-4 py-3 text-left text-sm font-medium bg-muted hover:bg-accent rounded-t-md focus:outline-none"
+                              onClick={() => setOpenFaqId(isOpen ? null : f.id)}
+                              aria-expanded={isOpen}
+                              aria-controls={`faq-panel-${f.id}`}
                             >
-                              Remove
-                            </Button>
+                              <span className="truncate pr-2">{f.question || <span className="italic text-muted-foreground">(No question)</span>}</span>
+                              <span className="ml-2 text-xs text-muted-foreground">{isOpen ? "▲" : "▼"}</span>
+                            </button>
+                            {isOpen && (
+                              <div id={`faq-panel-${f.id}`} className="p-4 border-t bg-background rounded-b-md">
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="text-xs text-muted-foreground">Q&A #{idx + 1}</div>
+                                  <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    type="button"
+                                    onClick={() =>
+                                      setFaqs((prev) => prev.filter((x) => x.id !== f.id))
+                                    }
+                                  >
+                                    Remove
+                                  </Button>
+                                </div>
+                                <div className="grid gap-1 mb-2">
+                                  <Label>Question</Label>
+                                  <Input
+                                    value={f.question}
+                                    onChange={(e) => {
+                                      const v = e.target.value;
+                                      setFaqs((prev) =>
+                                        prev.map((x) =>
+                                          x.id === f.id ? { ...x, question: v } : x
+                                        )
+                                      );
+                                    }}
+                                    placeholder="e.g. What is your refund policy?"
+                                  />
+                                </div>
+                                <div className="grid gap-1">
+                                  <Label>Answer</Label>
+                                  <textarea
+                                    className="min-h-24 rounded-md border bg-background p-3 text-sm"
+                                    value={f.answer}
+                                    onChange={(e) => {
+                                      const v = e.target.value;
+                                      setFaqs((prev) =>
+                                        prev.map((x) =>
+                                          x.id === f.id ? { ...x, answer: v } : x
+                                        )
+                                      );
+                                    }}
+                                    placeholder="e.g. We offer refunds within 30 days..."
+                                  />
+                                </div>
+                              </div>
+                            )}
                           </div>
-
-                          <div className="mt-3 grid gap-2">
-                            <div className="grid gap-1">
-                              <Label>Question</Label>
-                              <Input
-                                value={f.question}
-                                onChange={(e) => {
-                                  const v = e.target.value;
-                                  setFaqs((prev) =>
-                                    prev.map((x) =>
-                                      x.id === f.id ? { ...x, question: v } : x
-                                    )
-                                  );
-                                }}
-                                placeholder="e.g. What is your refund policy?"
-                              />
-                            </div>
-
-                            <div className="grid gap-1">
-                              <Label>Answer</Label>
-                              <textarea
-                                className="min-h-24 rounded-md border bg-background p-3 text-sm"
-                                value={f.answer}
-                                onChange={(e) => {
-                                  const v = e.target.value;
-                                  setFaqs((prev) =>
-                                    prev.map((x) =>
-                                      x.id === f.id ? { ...x, answer: v } : x
-                                    )
-                                  );
-                                }}
-                                placeholder="e.g. We offer refunds within 30 days..."
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </TabsContent>
