@@ -455,10 +455,12 @@ const handleUserInfoSubmit = (e: React.FormEvent) => {
     await sendMessage(val, "text");
   };
 
-  const handleStarterClick = (question: string, index: number) => {
-    setStarterQuestions((prev) => prev.filter((_, i) => i !== index));
-    sendMessage(question, "text");
-  };
+ const handleStarterClick = (question: string) => {
+  // Clear ALL starter questions immediately
+  setStarterQuestions([]);
+  // Then send the selected question
+  sendMessage(question, "text");
+};
 
   const toggleChat = () => {
     if (isOpen) {
