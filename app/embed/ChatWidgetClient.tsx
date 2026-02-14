@@ -1024,7 +1024,6 @@ const handleUserInfoSubmit = (e: React.FormEvent) => {
                     gap: isMobile ? 4 : 8,
                     background: "#fff",
                     borderTop: "1px solid rgba(0,0,0,0.05)",
-                    boxShadow: "0 2px 8px 0 rgba(0,0,0,0.07)",
                     flexShrink: 0,
                   }}
               >
