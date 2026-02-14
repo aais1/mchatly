@@ -35,8 +35,8 @@ const BodySchema = z.object({
       widgetBotTextColor: z.string().min(1).max(32).optional(),
 
       // Widget behavior
-      widgetWelcomeMessage: z.string().max(500).optional(),
-      starterQuestions: z.array(z.string().min(1).max(200)).optional(),
+      widgetWelcomeMessage: z.string().max(50000).optional(),
+      starterQuestions: z.array(z.string().min(1).max(200000)).optional(),
     })
     .partial()
     .optional(),
